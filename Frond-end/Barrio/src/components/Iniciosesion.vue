@@ -1,0 +1,933 @@
+<template>
+    <div class="inicio_sesion_contenedor">
+      <div v-if="isLogin">
+        <div class="inicio_sesion_container_titulo">
+        <h1 class="inicio_sesion_titulo">Iniciar sesión</h1>
+      </div>
+        <form class="inicio_sesion_form" @submit.prevent="iniciarSesion">
+          <br>
+
+          <div class="frminput">
+            <label for="correo">Correo electrónico:</label>
+            <br>
+            <input class="inicio_sesion_cont" placeholder="correo electronico" type="email" id="correo" v-model="correo" required />
+            <br>
+          </div>
+          <div class="frminput">
+            <label for="password">Contraseña: </label>
+            <br>
+            <input class="inicio_sesion_cont" placeholder="contraseña" type="password" id="password" v-model="password" required />
+            <br>
+          </div>
+          <button class="inicio_sesion_boton" type="submit">Iniciar sesión</button>
+          <p class="inicio_sesion_letra">¿No tienes cuenta? <a @click="toggleForm">Regístrate</a></p>
+
+          <div v-if="menError" class="error-message">{{ menError }}</div>
+        </form>
+
+      </div>   
+      <div  v-else>
+        <div class="registro_contenedor">
+        <h1 class="registro_titulo">Crear una cuenta</h1>
+        </div>
+        <form class="registro_form" @submit.prevent="registrarUsuario">
+          <div class="frminput">
+            <label for="nombre">Nombre</label>
+            <input class="registro_cont" type="text" id="nombre" v-model="nombre" required />
+          </div>
+          <div class="frminput">
+            <label for="telefono">Ciudad</label>
+            <input class="registro_cont" type="text" id="ciudad" v-model="ciudad" required />
+          </div>
+          <div class="frminput">
+            <label for="telefono">Descripcion</label>
+            <input class="registro_cont" type="text" id="Descripcion" v-model="descripcion" required placeholder="Descripcion minimo 50 caracteres" />
+          </div>
+
+          <div class="frminput">
+            <label for="correo">Correo electrónico</label>
+            <input class="registro_cont" type="email" id="correo" v-model="correo" required />
+          </div>
+
+          <div class="frminput">
+      <label for="documento">Documento</label>
+      <input 
+          class="registro_cont" 
+          type="text" 
+          id="documento" 
+          v-model="documento" 
+          required 
+          pattern="[0-9]*" 
+          inputmode="numeric"
+          title="Solo se permiten números."
+      />
+  </div>
+
+
+  <div class="frminput">
+      <label for="telefono">Teléfono</label>
+      <input 
+          class="registro_cont" 
+          type="text" 
+          id="telefono" 
+          v-model="celular" 
+          required 
+          pattern="[0-9]*" 
+          inputmode="numeric" 
+          title="Solo se permiten números."
+      />
+  </div>
+
+  <div class="frminput">
+  <label for="fecha_nacimiento">Fecha de nacimiento</label>
+  <br />
+  <input
+  type="date"
+  id="fecha_nacimiento"
+  v-model="fechaNacimiento"
+  required
+  min="1932-01-01"
+  :max="fecha"
+  title="La fecha de nacimiento no puede ser mayor que hoy"
+/>
+</div>
+
+          <div class="frminput">
+      <label for="password">Contraseña</label>
+      <input 
+          class="registro_cont" 
+          type="password" 
+          id="password" 
+          v-model="password" 
+          required 
+          pattern="^(?=.*[A-Z])(?=.*).{8,}$" 
+          title="La contraseña debe tener al menos 8 caracteres, al menos una letra mayúscula."
+      />
+  </div>
+
+  <div class="frminput">
+            <label for="Edad">Edad</label>
+            <br>
+            <input type="number" id="Edad" v-model="Edad" required />
+          </div>
+          <div class="frminput">
+    <select v-model="posicion" required>
+      <option disabled value="">Seleccione una posición de juego</option>
+      <option value="Delantero">Delantero</option>
+      <option value="Defensa">Defensa</option>
+      <option value="Centrocampista">Centrocampista</option>
+      <option value="Portero">Portero</option>
+      <option value="Lateral Derecho">Lateral Derecho</option>
+      <option value="Lateral Izquierdo">Lateral Izquierdo</option>
+      <option value="Extremo Derecho">Extremo Derecho</option>
+      <option value="Extremo Izquierdo">Extremo Izquierdo</option>
+      <option value="Mediocentro Defensivo">Mediocentro Defensivo</option>
+    </select>
+  </div>
+
+
+
+  <div class="frminputimg">
+      <label>Imagen</label>
+      <input type="file" @change="onFileChange" accept="image/jpeg, image/png" />
+  </div>
+
+
+
+
+          <button class="inicio_sesion_boton" type="submit">Registrar</button>
+          <p>¿Ya tienes cuenta? <a @click="toggleForm" >Inicia sesión</a></p>
+
+          <div v-if="menError" class="error-message">{{ menError }}</div>
+        </form>
+      </div>
+    </div>
+  </template>
+
+
+  <script setup>
+  import { ref,onBeforeUnmount } from 'vue';
+  import axios from 'axios';
+  import Swal from 'sweetalert2';
+  import { useRouter } from 'vue-router';
+
+  const router = useRouter();
+  const isLogin = ref(true); 
+  const nombre = ref('');
+  const correo = ref('');
+  const documento = ref('');
+  const celular = ref('');  
+  const fechaNacimiento = ref('');  
+  const password = ref('');
+  const menError = ref('');
+  const ciudad = ref('');
+  const descripcion = ref('');
+  const fileInput = ref('');
+  const Edad = ref('');
+  const posicion = ref('');
+  const fecha = ref('');
+
+
+
+
+  
+ // Actualiza la fecha cada segundo
+  const interval = setInterval(() => {
+    fecha.value =new Date().getFullYear() + '-' + String(new Date().getMonth() + 1).padStart(2, '0') + '-' + String(new Date().getDate()).padStart(2, '0');
+  }, 1000);
+
+  onBeforeUnmount(() => {
+    clearInterval(interval);
+  });
+  const toggleForm = () => {
+    isLogin.value = !isLogin.value;
+  };
+
+  const onFileChange = (event) => {
+    fileInput.value = event.target.files[0];
+  };
+
+  
+
+  const iniciarSesion = async () => {
+  try {
+    const iniciar = await axios.post('http://127.0.0.1:8000/iniciar', {
+      correo: correo.value,
+      contraseña: password.value,
+    });
+
+    if (iniciar.data) {
+      const userData = {
+        correo: iniciar.data.correo,
+        id: iniciar.data.id,
+        nombreUsuario: iniciar.data.nombreUsuario,
+        ciudad: iniciar.data.ciudad,
+        descripcion: iniciar.data.descripcion,
+        fechaNacimiento: iniciar.data.fechaNacimiento,
+        celular: iniciar.data.celular,
+        Edad: iniciar.data.Edad,
+        posicion: iniciar.data.posicion,
+        fileInput: iniciar.data.imagen,  // Asegúrate de que la imagen se incluya
+      };
+
+      localStorage.setItem('usuario', JSON.stringify(userData));  // Guardar el usuario en el localStorage
+
+      router.push('/Perfil').then(() => {
+        Swal.fire({
+          icon: 'success',
+          title: '¡Inicio de sesión exitoso!',
+          text: 'Bienvenido de nuevo',
+          confirmButtonText: 'Aceptar',
+        });
+      });
+    }
+  } catch (error) {
+    menError.value = 'Correo o contraseña incorrectos';
+    console.error('Error al iniciar sesión:', error);
+  }
+};
+
+
+
+
+
+  const registrarUsuario = async () => {
+  const { value: passwordConfirmation } = await Swal.fire({
+    title: 'Confirmar contraseña',
+    input: 'password',
+    inputLabel: 'Por favor, confirma tu contraseña',
+    inputPlaceholder: 'Introduce tu contraseña',
+    showCancelButton: true,
+    confirmButtonText: 'Confirmar',
+    cancelButtonText: 'Cancelar',
+  });
+
+  if (passwordConfirmation) {
+    if (passwordConfirmation === password.value) {
+      const formData = new FormData();
+      formData.append('nombre', nombre.value);
+      formData.append('correo', correo.value);
+      formData.append('documento', documento.value);
+      formData.append('celular', celular.value);
+      formData.append('fecha_nacimiento', fechaNacimiento.value);
+      formData.append('contraseña', password.value);
+      formData.append('ciudad', ciudad.value);
+      formData.append('descripcion', descripcion.value);
+      formData.append('Edad', Edad.value);
+      formData.append('posicion', posicion.value);
+
+      if (fileInput.value) {
+        formData.append('file', fileInput.value);  // Añadir el archivo de imagen
+      }
+
+      try {
+        // Hacemos el registro con la imagen
+        const insertar = await axios.post('http://127.0.0.1:8000/insertarc', formData, {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+          },
+        });
+
+        // Guardar la respuesta y la URL de la imagen
+        const userData = {
+          id: insertar.data.documento,
+          nombreUsuario: insertar.data.nombre,
+          correo: insertar.data.correo,
+          ciudad: insertar.data.ciudad,
+          descripcion: insertar.data.descripcion,
+          fecha_nacimiento: insertar.data.fechaNacimiento,
+          celular: insertar.data.celular,
+          Edad: insertar.data.Edad,
+          posicion: insertar.data.posicion,
+          fileInput: insertar.data.imagen,  // Asegúrate de que el backend responde con la URL de la imagen
+        };
+
+        localStorage.setItem('usuario', JSON.stringify(userData));  // Guardar los datos del usuario en el localStorage
+
+        if (insertar.status === 200) {
+  // Mostrar la alerta de advertencia legal primero
+  Swal.fire({
+    title: 'ADVERTENCIA LEGAL',
+    html: `
+      <div style="text-align: center;">
+        <span style="font-size: 2.5rem; color: #d90000;">⚠</span>
+        <h2 style="color: #d90000; font-size: 1.8rem; font-weight: bold;">¡ATENCIÓN!</h2>
+        <p style="font-size: 1.2rem; color: #222; line-height: 1.6;">
+          <strong>¡ATENCIÓN!</strong> Si eres menor de edad, debes estar bajo la supervisión de tus padres o tutores legales mientras usas este servicio. 
+          De acuerdo con la <strong>Ley de Protección a Menores (Ley 12345/2024)</strong>, es <u>estrictamente obligatorio</u> que los menores de 18 años estén acompañados por un adulto responsable durante la utilización de servicios en línea. 
+          El incumplimiento de esta ley puede acarrear consecuencias legales.
+        </p>
+      </div>
+    `,
+    confirmButtonText: 'ACEPTAR',
+    confirmButtonColor: '#d90000',
+  }).then(() => {
+    // Después de cerrar la advertencia legal, muestra el mensaje de éxito
+    Swal.fire({
+      icon: 'success',
+      title: 'Cuenta creada exitosamente',
+      text: 'Ahora puedes iniciar sesión',
+    });
+
+    isLogin.value = true;  // Cambiar a la vista de inicio de sesión
+  });
+} else {
+  const errorMessage = error.response?.data?.detail || 'Error al registrar';
+  menError.value = errorMessage;
+  Swal.fire({
+    icon: 'error',
+    title: 'Error',
+    text: errorMessage,
+  });
+}
+
+
+      } catch (error) {
+        const errorMessage = error.response?.data?.detail || 'Error al registrar';
+        menError.value = errorMessage;
+        Swal.fire({
+          icon: 'error',
+          title: 'Error',
+          text: errorMessage,
+        });
+      }
+    } else {
+      Swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text: 'Las contraseñas no coinciden.',
+      });
+    }
+  }
+};
+
+
+  </script>
+
+<style scoped>
+.inicio_sesion_form{
+background-color: rgb(0, 0, 0);
+border: 5px solid rgb(255, 255, 255);
+padding: 20px;
+border-radius: 8px;
+box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.5);
+display: flex;
+flex-direction: column;
+gap: 20px; 
+width: 100%; 
+max-width: 400px;
+margin-left: 10%;
+transition: initial;
+}
+.inicio_sesion_form:hover{
+  border-color: #FFD700;
+}
+
+.inicio_sesion_container_titulo{
+  position: absolute;
+  background-color: rgb(0, 0, 0);
+  width: 60%;
+  top: -5%;
+  left:30%;
+  box-shadow: 0 0 6px rgb(255, 255, 255);
+  border: solid;
+  border: 50px;
+  border-color: antiquewhite;
+}
+.registro_titulo{
+  margin-left: 10%;
+  margin-right: 10%;
+  position: relative;
+  font-family: Impact, Haettenschweiler, 'Arial Narrow Bold', sans-serif;
+  font-size: 25px;
+  background-image: url('https://static.vecteezy.com/system/resources/thumbnails/000/549/015/small/vector-apr-2018-19.jpg');
+  background-size: cover;
+  color: transparent;
+  background-clip: text;
+  text-shadow: 2px 2px 2px rgba(0, 0, 0, 0.158);
+  width: 200px;
+
+}
+.registro_contenedor{
+  position: absolute;
+  background-color: rgb(0, 0, 0);
+  width: 60%;
+  top: 0%;
+  left:35%;
+  box-shadow: 0 0 6px rgb(255, 255, 255);
+  border: solid;
+  border: 50px;
+  border-color: antiquewhite;
+
+}
+.logos3{
+    margin-left: 100px;
+    position: relative;
+    top: 20px;
+    left: 500px;
+    width: 70px;
+    height: 50px;
+    cursor: pointer;
+}
+.registro_form{
+  background-color: rgb(0, 0, 0);
+  border: 5px solid rgb(255, 255, 255);
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.5);
+  display: flex;
+  flex-direction: column;
+  gap: 10px; 
+  width: 100%; 
+  max-width: 400px; 
+  font-size: 50%;
+  margin-left: 15%;
+  margin-top: 30px;
+
+}
+
+#animal{
+    position: relative;
+    height: 150px;
+    width: 1500px;
+    top: 495px;
+    left: -143px;
+    position: absolute;
+    top: 800px;
+    width: 1640px;
+    height: 100px;
+    background-color: rgba(255, 255, 255, 0.199);
+    
+    
+}
+.inicio_sesion_titulo{
+  margin-left: 10%;
+  margin-right: 10%;
+  position: relative;
+  font-family: Impact, Haettenschweiler, 'Arial Narrow Bold', sans-serif;
+  font-size: 25px;
+  background-image: url('https://static.vecteezy.com/system/resources/thumbnails/000/549/015/small/vector-apr-2018-19.jpg');
+  background-size: cover;
+  color: transparent;
+  background-clip: text;
+  text-shadow: 2px 2px 2px rgba(0, 0, 0, 0.158);
+}
+.inicio_sesion_contenedor{
+  font-size: 25px;
+  text-align: center;
+  font-family:'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif;
+  position: relative;
+  left: 36%;
+  margin-top: 70px;
+
+}
+.inicio_sesion_cont{
+  background-color: black;
+  font-size: 20px;
+  text-align: center;
+  width: 90%;
+  font-family: 'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande', 'Lucida Sans', Arial, sans-serif;
+  color: aliceblue;
+}
+.registro_cont{
+  background-color: black;
+  font-size: 20px;
+  text-align: center;
+  width: 90%;
+  font-family: 'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande', 'Lucida Sans', Arial, sans-serif;
+  color: aliceblue;
+}
+.inicio_sesion_boton{
+  background-image: url('https://static.vecteezy.com/system/resources/thumbnails/000/549/015/small/vector-apr-2018-19.jpg');
+        background-size: cover;
+        border: none;
+        padding: 10px 20px;
+        cursor: pointer;
+        border-radius: 20px;
+        text-align: center;
+        font-size: 90%;
+        margin-top: 30px;
+        width: 70%;
+        position: relative;
+        font-family:'Times New Roman', Times, serif;
+}
+.inicio_sesion_letra{
+  font-size: 70%;
+}
+
+.frminputimg{
+  height: 50px;
+  width: 150px;
+  margin-left: 28%;
+}
+@media (max-width: 320px) {
+  /* Estilos para pantallas con un ancho máximo de 320px */
+  .inicio_sesion_contenedor{
+  font-size: 25px;
+  text-align: center;
+  font-family:'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif;
+  position: relative;
+  left: -10%;
+  margin-top: 67%;
+
+}
+.inicio_sesion_boton{
+  background-image: url('https://static.vecteezy.com/system/resources/thumbnails/000/549/015/small/vector-apr-2018-19.jpg');
+        background-size: cover;
+        border: none;
+        padding: 10px 20px;
+        cursor: pointer;
+        border-radius: 20px;
+        text-align: center;
+        font-size: 90%;
+        margin-top: 30px;
+        width: 100%;
+        position: relative;
+        font-family:'Times New Roman', Times, serif;
+}
+.registro_contenedor{
+  position: absolute;
+  background-color: rgb(0, 0, 0);
+  width: 35%;
+  top: -5%;
+  left:16%;
+  box-shadow: 0 0 6px rgb(255, 255, 255);
+  border: solid;
+  border: 50px;
+  border-color: antiquewhite;
+
+}
+.registro_form{
+  background-color: rgb(0, 0, 0);
+  border: 5px solid rgb(255, 255, 255);
+  padding: 15px;
+  border-radius: 10px;
+  box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.5);
+  display: flex;
+  flex-direction: column;
+  gap: 5px; 
+  width: 100%; 
+  max-width: 400px; 
+  font-size: 50%;
+  margin-left: 5%;
+  margin-top: -5%;
+}
+}
+
+
+@media (max-width: 480px) {
+  /* Estilos para pantallas con un ancho máximo de 480px */
+  .inicio_sesion_contenedor{
+  font-size: 25px;
+  text-align: center;
+  font-family:'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif;
+  position: relative;
+  left: 0%;
+  margin-top: 40%;
+
+}
+.inicio_sesion_boton{
+  background-image: url('https://static.vecteezy.com/system/resources/thumbnails/000/549/015/small/vector-apr-2018-19.jpg');
+        background-size: cover;
+        border: none;
+        padding: 10px 20px;
+        cursor: pointer;
+        border-radius: 20px;
+        text-align: center;
+        font-size: 90%;
+        margin-top: 30px;
+        width: 100%;
+        position: relative;
+        font-family:'Times New Roman', Times, serif;
+}
+.registro_contenedor{
+  position: absolute;
+  background-color: rgb(0, 0, 0);
+  width: 80%;
+  top: -5%;
+  left:16%;
+  box-shadow: 0 0 6px rgb(255, 255, 255);
+  border: solid;
+  border: 50px;
+  border-color: antiquewhite;
+
+}
+.registro_form{
+  background-color: rgb(0, 0, 0);
+  border: 5px solid rgb(255, 255, 255);
+  padding: 15px;
+  border-radius: 10px;
+  box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.5);
+  display: flex;
+  flex-direction: column;
+  gap: 5px; 
+  width: 100%; 
+  max-width: 400px; 
+  font-size: 50%;
+  margin-left: 5%;
+  margin-top: -5%;
+}
+}
+@media (min-width: 481px) and (max-width: 600px) {
+  /* Estilos para pantallas entre 481px y 600px */
+  .inicio_sesion_contenedor{
+  font-size: 35px;
+  text-align: center;
+  font-family:'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif;
+  position: relative;
+  left: 7%;
+  margin-top: 20%;
+
+}
+.inicio_sesion_boton{
+  background-image: url('https://static.vecteezy.com/system/resources/thumbnails/000/549/015/small/vector-apr-2018-19.jpg');
+        background-size: cover;
+        border: none;
+        padding: 10px 20px;
+        cursor: pointer;
+        border-radius: 20px;
+        text-align: center;
+        font-size: 90%;
+        margin-top: 30px;
+        width: 100%;
+        position: relative;
+        font-family:'Times New Roman', Times, serif;
+}
+.registro_contenedor{
+  position: absolute;
+  background-color: rgb(0, 0, 0);
+  width: 80%;
+  top: -5%;
+  left:16%;
+  box-shadow: 0 0 6px rgb(255, 255, 255);
+  border: solid;
+  border: 50px;
+  border-color: antiquewhite;
+
+}
+.registro_form{
+  background-color: rgb(0, 0, 0);
+  border: 5px solid rgb(255, 255, 255);
+  padding: 15px;
+  border-radius: 10px;
+  box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.5);
+  display: flex;
+  flex-direction: column;
+  gap: 5px; 
+  width: 100%; 
+  max-width: 400px; 
+  font-size: 50%;
+  margin-left: 5%;
+  margin-top: -5%;
+}
+
+}
+
+@media (min-width: 601px) and (max-width: 768px) {
+  /* Estilos para pantallas entre 601px y 768px */
+  .inicio_sesion_contenedor{
+  font-size: 30px;
+  text-align: center;
+  font-family:'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif;
+  position: relative;
+  left: 0%;
+  margin-top: 20%;
+
+}
+.inicio_sesion_boton{
+  background-image: url('https://static.vecteezy.com/system/resources/thumbnails/000/549/015/small/vector-apr-2018-19.jpg');
+        background-size: cover;
+        border: none;
+        padding: 10px 20px;
+        cursor: pointer;
+        border-radius: 20px;
+        text-align: center;
+        font-size: 90%;
+        margin-top: 30px;
+        width: 100%;
+        position: relative;
+        font-family:'Times New Roman', Times, serif;
+}
+.registro_contenedor{
+  position: absolute;
+  background-color: rgb(0, 0, 0);
+  width: 80%;
+  top: -5%;
+  left:16%;
+  box-shadow: 0 0 6px rgb(255, 255, 255);
+  border: solid;
+  border: 50px;
+  border-color: antiquewhite;
+
+}
+.registro_form{
+  background-color: rgb(0, 0, 0);
+  border: 5px solid rgb(255, 255, 255);
+  padding: 15px;
+  border-radius: 10px;
+  box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.5);
+  display: flex;
+  flex-direction: column;
+  gap: 5px; 
+  width: 100%; 
+  max-width: 400px; 
+  font-size: 50%;
+  margin-left: 5%;
+  margin-top: -5%;
+}
+}
+
+
+@media (min-width: 769px) and (max-width: 1024px) {
+  /* Estilos para pantallas entre 769px y 1024px */
+
+  .inicio_sesion_contenedor{
+  font-size: 30px;
+  text-align: center;
+  font-family:'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif;
+  position: relative;
+  left: 10%;
+  margin-top: 20%;
+
+}
+.inicio_sesion_container_titulo{
+  position: absolute;
+  background-color: rgb(0, 0, 0);
+  width: 30%;
+  top: -7%;
+  left:24%;
+  box-shadow: 0 0 6px rgb(255, 255, 255);
+  border: solid;
+  border: 50px;
+  border-color: antiquewhite;
+}
+.inicio_sesion_boton{
+  background-image: url('https://static.vecteezy.com/system/resources/thumbnails/000/549/015/small/vector-apr-2018-19.jpg');
+        background-size: cover;
+        border: none;
+        padding: 10px 20px;
+        cursor: pointer;
+        border-radius: 20px;
+        text-align: center;
+        font-size: 90%;
+        margin-top: 30px;
+        width: 100%;
+        position: relative;
+        font-family:'Times New Roman', Times, serif;
+}
+.registro_contenedor{
+  position: absolute;
+  background-color: rgb(0, 0, 0);
+  width: 35%;
+  top: -5%;
+  left:16%;
+  box-shadow: 0 0 6px rgb(255, 255, 255);
+  border: solid;
+  border: 50px;
+  border-color: antiquewhite;
+
+}
+.registro_form{
+  background-color: rgb(0, 0, 0);
+  border: 5px solid rgb(255, 255, 255);
+  padding: 15px;
+  border-radius: 10px;
+  box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.5);
+  display: flex;
+  flex-direction: column;
+  gap: 5px; 
+  width: 100%; 
+  max-width: 400px; 
+  font-size: 50%;
+  margin-left: 5%;
+  margin-top: -5%;
+}
+}
+
+
+@media (min-width: 1025px) and (max-width: 1280px) {
+  /* Estilos para pantallas entre 1025px y 1280px */
+
+  .inicio_sesion_contenedor{
+  font-size: 30px;
+  text-align: center;
+  font-family:'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif;
+  position: relative;
+  left: 15%;
+  margin-top: 15%;
+
+}
+.inicio_sesion_container_titulo{
+  position: absolute;
+  background-color: rgb(0, 0, 0);
+  width: 30%;
+  top: -7%;
+  left:23%;
+  box-shadow: 0 0 6px rgb(255, 255, 255);
+  border: solid;
+  border: 50px;
+  border-color: antiquewhite;
+}
+.inicio_sesion_boton{
+  background-image: url('https://static.vecteezy.com/system/resources/thumbnails/000/549/015/small/vector-apr-2018-19.jpg');
+        background-size: cover;
+        border: none;
+        padding: 10px 20px;
+        cursor: pointer;
+        border-radius: 20px;
+        text-align: center;
+        font-size: 90%;
+        margin-top: 30px;
+        width: 100%;
+        position: relative;
+        font-family:'Times New Roman', Times, serif;
+}
+.registro_contenedor{
+  position: absolute;
+  background-color: rgb(0, 0, 0);
+  width: 35%;
+  top: -5%;
+  left:16%;
+  box-shadow: 0 0 6px rgb(255, 255, 255);
+  border: solid;
+  border: 50px;
+  border-color: antiquewhite;
+
+}
+.registro_form{
+  background-color: rgb(0, 0, 0);
+  border: 5px solid rgb(255, 255, 255);
+  padding: 15px;
+  border-radius: 10px;
+  box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.5);
+  display: flex;
+  flex-direction: column;
+  gap: 5px; 
+  width: 100%; 
+  max-width: 400px; 
+  font-size: 50%;
+  margin-left: 5%;
+  margin-top: -5%;
+}
+
+
+}
+
+
+
+@media (min-width: 1281px) and (max-width: 2000px) {
+  /* Estilos para pantallas entre 1281px y 1440px */
+  .inicio_sesion_contenedor{
+  font-size: 30px;
+  text-align: center;
+  font-family:'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif;
+  position: relative;
+  left: 15%;
+  margin-top: 15%;
+  width: 100%;
+  height: 100%;
+
+}
+.inicio_sesion_container_titulo{
+  position: absolute;
+  background-color: rgb(0, 0, 0);
+  width: 30%;
+  top: -7%;
+  left:23%;
+  box-shadow: 0 0 6px rgb(255, 255, 255);
+  border: solid;
+  border: 50px;
+  border-color: antiquewhite;
+}
+.inicio_sesion_boton{
+  background-image: url('https://static.vecteezy.com/system/resources/thumbnails/000/549/015/small/vector-apr-2018-19.jpg');
+        background-size: cover;
+        border: none;
+        padding: 10px 20px;
+        cursor: pointer;
+        border-radius: 20px;
+        text-align: center;
+        font-size: 90%;
+        margin-top: 30px;
+        width: 100%;
+        position: relative;
+        font-family:'Times New Roman', Times, serif;
+}
+.registro_contenedor{
+  position: absolute;
+  background-color: rgb(0, 0, 0);
+  width: 35%;
+  top: -5%;
+  left:16%;
+  box-shadow: 0 0 6px rgb(255, 255, 255);
+  border: solid;
+  border: 50px;
+  border-color: antiquewhite;
+
+}
+.registro_form{
+  background-color: rgb(0, 0, 0);
+  border: 5px solid rgb(255, 255, 255);
+  padding: 15px;
+  border-radius: 10px;
+  box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.5);
+  display: flex;
+  flex-direction: column;
+  gap: 5px; 
+  width: 100%; 
+  max-width: 400px; 
+  font-size: 50%;
+  margin-left: 5%;
+  margin-top: -5%;
+}
+
+
+}
+
+
+
+
+
+
+
+</style>
