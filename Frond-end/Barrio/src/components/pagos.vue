@@ -76,7 +76,7 @@ const pagarTorneo = () => {
             type="number"
             v-model="recarga"
             placeholder="Monto a recargar"
-            class="w-full sm:w-auto p-4 border-2 border-indigo-600 rounded-xl bg-gray-900 text-white placeholder-gray-400 focus:ring-4 focus:ring-indigo-500 transition-all"
+            class="w-full sm:w-auto p-4 border-2 border-indigo-600 rounded-x  l bg-gray-900 text-white placeholder-gray-400 focus:ring-4 focus:ring-indigo-500 transition-all"
           />
           <button
             @click="recargarSaldo"
@@ -90,7 +90,7 @@ const pagarTorneo = () => {
 
       <!-- Servicios Disponibles -->
       <div class="p-6 border-t border-gray-700 bg-gray-800">
-        <h3 class="text-2xl font-bold text-white mb-4">Servicios Disponibles</h3>
+        <h3 class="text-2xl font-bold text-white mb-4">Pendientes Por Pagar</h3>
         <ul class="space-y-6">
           <li
             v-for="servicio in servicios"
@@ -142,6 +142,7 @@ const pagarTorneo = () => {
     </div>
   </div>
 </template>
+
 <style scoped>
 /* Fondo general */
 .min-h-screen {
@@ -160,19 +161,21 @@ const pagarTorneo = () => {
   box-shadow: 0 12px 30px rgba(255, 215, 0, 0.2);
   border: 1px solid #a67c00;
   padding: 2rem;
+  max-width: 90%;
 }
 
 /* Encabezado */
 .p-8.bg-gradient-to-r {
-  background: linear-gradient(45deg, #d4af37, #b8860b); /* Gradiente de dorado */
+  background: linear-gradient(45deg, #d4af37, #b8860b);
   text-align: center;
   color: #fff;
   border-top-left-radius: 2rem;
   border-top-right-radius: 2rem;
+  padding: 1.5rem;
 }
 
 .p-8.bg-gradient-to-r h1 {
-  font-size: 3.5rem;
+  font-size: 3rem;
   font-weight: 800;
   letter-spacing: 0.1rem;
   margin-bottom: 1rem;
@@ -186,8 +189,8 @@ const pagarTorneo = () => {
 
 /* Saldo disponible */
 .text-green-500 {
-  color: #ffcc00; /* Amarillo dorado vibrante */
-  font-size: 3rem;
+  color: #ffcc00;
+  font-size: 2.5rem;
   font-weight: 800;
   margin-top: 1rem;
 }
@@ -198,7 +201,7 @@ input {
   padding: 1rem;
   border: 2px solid #ffcc00;
   border-radius: 1rem;
-  background: #4a3625; /* Marrón oscuro */
+  background: #4a3625;
   color: #fff6d5;
   font-size: 1rem;
   outline: none;
@@ -207,7 +210,7 @@ input {
 
 input:focus {
   border-color: #ffd700;
-  background: #5c432f; /* Fondo marrón más claro */
+  background: #5c432f;
 }
 
 /* Botones */
@@ -220,13 +223,13 @@ button {
   transition: background-color 0.3s ease, transform 0.3s ease;
   cursor: pointer;
   border: none;
-  background: #d4af37; /* Dorado clásico */
+  background: #d4af37;
   color: #1a120b;
 }
 
 button:hover {
   transform: scale(1.1);
-  background: #b8860b; /* Dorado más oscuro */
+  background: #b8860b;
 }
 
 button:disabled {
@@ -237,7 +240,7 @@ button:disabled {
 
 /* Servicios */
 li {
-  background: #4a3625; /* Marrón oscuro */
+  background: #4a3625;
   padding: 1.5rem;
   border-radius: 1rem;
   box-shadow: 0 10px 30px rgba(255, 215, 0, 0.15);
@@ -249,13 +252,13 @@ li {
 }
 
 li:hover {
-  background: #5c432f; /* Marrón más claro */
+  background: #5c432f;
   transform: scale(1.05);
 }
 
 li p {
   margin: 0;
-  color: #fff6d5; /* Crema dorado */
+  color: #fff6d5;
 }
 
 /* Pie de página */
@@ -266,6 +269,31 @@ li p {
   color: #caa472;
   border-bottom-left-radius: 2rem;
   border-bottom-right-radius: 2rem;
+  padding: 1rem;
 }
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .max-w-4xl {
+    border-radius: 3rem;
+    padding: 1.5rem;
+  }
+  
+  .p-8.bg-gradient-to-r h1 {
+    font-size: 2.5rem;
+  }
+  
+  .text-green-500 {
+    font-size: 2rem;
+  }
+}
+@media (max-width: 480px) {
+  /* Fondo general */
+.min-h-screen {
+  margin-top: 45%;
+}
+
+}
+
 
 </style>

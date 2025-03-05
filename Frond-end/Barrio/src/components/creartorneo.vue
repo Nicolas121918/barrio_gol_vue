@@ -29,8 +29,7 @@
         <button type="button" class="centered-button" @click="obtenerUbicacionActual">Usar Mi Ubicación</button>
       </div>
 
-      <!-- Datos Básicos del Torneo -->
-      <div v-if="form.tipo === 'torneo'">
+      <div>
         <div class="form-group">
           <label for="numPartidos">Número de Partidos:</label>
           <input type="number" id="numPartidos" v-model="form.numPartidos" min="1" required placeholder="Número de partidos del torneo" />
@@ -66,15 +65,18 @@
             placeholder="Escribe las reglas del torneo aquí"
           ></textarea>
         </div>
-      </div>
 
+        <input type="hidden" v-model="form.correo_usuario" />
+
+        
+      </div>
       <div class="form_group">
       <label class="logotext">Logo del torneo</label>
       <input type="file" @change="onFileChange" accept="image/jpeg, image/png" />
   </div>
 
       <div class="form-group">
-        <router-Link to="/torneoscreador"><button type="submit" class="centered-button">Crear</button></router-Link>
+    <button type="submit" class="centered-button">Crear</button>
         
       </div>
     </form>
@@ -92,21 +94,19 @@ export default {
   },
   data() {
     return {
+      correo_usuario : "",
       form: {
-        tipo: 'torneo', // Fijamos el tipo en "torneo" 
         nombre: '',
         fecha: '',
         ubicacion: '',
         numPartidos: '', // Número de partidos para el torneo
         apuestaTorneo: '',
         precioArbitrajeTorneo: '',
+        correo_usuario : "",
         precioInscripcion: '',
         reglasTorneo: '', // Campo para las reglas del torneo
         numeroparticipantes: '',
         logoTeam : null,
-
-
-  
 
       },
     };
@@ -117,24 +117,20 @@ export default {
 },
     async crearEvento() {
       const datosenviar = new FormData();
-      
-
-      datosenviar.append("tipo", this.form.tipo);
       datosenviar.append("nombre", this.form.nombre);
       datosenviar.append("fecha", this.form.fecha);
       datosenviar.append("ubicacion", this.form.ubicacion);
+      datosenviar.append("numPartidos", this.form.numPartidos);
+      datosenviar.append("apuestaTorneo", this.form.apuestaTorneo);
+      datosenviar.append("precioArbitrajeTorneo", this.form.precioArbitrajeTorneo);
+      datosenviar.append("precioInscripcion", this.form.precioInscripcion);
+      datosenviar.append("reglasTorneo", this.form.reglasTorneo);
       datosenviar.append("numeroparticipantes", this.form.numeroparticipantes);
       datosenviar.append("logoTeam", this.form.logoTeam);
+      datosenviar.append("correo_usuario", this.form.correo_usuario);
 
 
-      // Solo agregar campos del torneo si el tipo seleccionado es "Torneo"
-      if (this.form.tipo === 'torneo') {
-        datosenviar.append("numPartidos", this.form.numPartidos || "");
-        datosenviar.append("apuestaTorneo", this.form.apuestaTorneo || "");
-        datosenviar.append("precioArbitrajeTorneo", this.form.precioArbitrajeTorneo || "");
-        datosenviar.append("precioInscripcion", this.form.precioInscripcion || "");
-        datosenviar.append("reglasTorneo", this.form.reglasTorneo || "");
-      }
+      
         // Agregar el archivo de logo al FormData
     if (this.form.logoTeam) {
       datosenviar.append("logoTeam", this.form.logoTeam);
@@ -142,7 +138,7 @@ export default {
     
 
       try {
-        const response = await axios.post("http://localhost:8000/crearEvento", datosenviar, {
+        const response = await axios.post("http://localhost:8000/crearTorneo", datosenviar, {
           headers: { "Content-Type": "multipart/form-data" },
         });
 
@@ -151,7 +147,6 @@ export default {
         
         // Limpiar el formulario después de enviar los datos
         this.form = {
-          tipo: 'torneo', // Tipo siempre será torneo
           nombre: '',
           fecha: '',
           ubicacion: '',
@@ -160,12 +155,12 @@ export default {
           precioArbitrajeTorneo: '',
           precioInscripcion: '',
           reglasTorneo: '',
+          correo_usuario:'',
           logoTeam : null,
         };
 
       } catch (error) {
         console.error("Error al crear el evento:", error);
-        alert("Hubo un error al crear el evento");
         console.log("Detalles del error:", error.response?.data);
       }
     },
@@ -219,6 +214,13 @@ export default {
   },
   mounted() {
     this.initMap();
+
+    const usuarios = JSON.parse(localStorage.getItem('usuario'));
+      if (usuarios) {
+      this.form.correo_usuario = usuarios.correo;
+  } else {
+    console.error('No se encontró usuario en localStorage');
+  }
   },
 };
 </script>

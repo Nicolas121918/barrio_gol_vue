@@ -19,32 +19,13 @@
       </div>
     </header>
 
-    <!-- Opción para publicar artículos -->
-    <div class="publish-item">
-      <h2>Publicar nuevo artículo</h2>
-      <form @submit.prevent="publishProduct">
-        <input v-model="newProduct.name" type="text" placeholder="Nombre del producto" required />
-        <textarea v-model="newProduct.description" placeholder="Descripción del producto" required></textarea>
-        <input v-model="newProduct.price" type="number" placeholder="Precio" required />
-        
-        <!-- Input para cargar la imagen -->
-        <input type="file" @change="handleImageUpload" required />
-        <div v-if="newProduct.image">
-          <img :src="newProduct.image" alt="Vista previa de la imagen" class="image-preview" />
-        </div>
-
-        <button type="submit" class="btn">Publicar artículo</button>
-      </form>
-    </div>
-
     <!-- Configuración -->
     <div v-if="settingsVisible" class="overlay" @click="toggleSettings">
       <div class="settings-panel" @click.stop>
         <h2>Opciones de Cuenta</h2>
-        <router-link to="pay"><button @click="recargarCuenta" class="btn">💰 Recargar Cuenta</button></router-link>
-
-
-        <button @click="verSaldo" class="btn">📊 Ver Saldo</button>
+        <router-Link to="pay"><button class="btn">💰 Recargar Cuenta</button></router-Link>
+        <router-Link to="pay"><button class="btn">📊 Ver Saldo</button></router-Link>
+        <router-Link to="vendedor"><button class="btn">💸 Vender</button></router-Link>
         <button @click="toggleSettings" class="btn close-settings-btn">Cerrar</button>
       </div>
     </div>
@@ -85,11 +66,24 @@
       </div>
     </div>
 
+    <!-- Overlay para mostrar más información sobre el producto -->
+    <div v-if="selectedProduct" class="overlay" @click="selectedProduct = null">
+      <div class="product-detail-panel" @click.stop>
+        <img :src="selectedProduct.image" :alt="selectedProduct.name" class="product-detail-image" />
+        <h2>{{ selectedProduct.name }}</h2>
+        <p>{{ selectedProduct.description }}</p>
+        <p class="price">${{ selectedProduct.price }}</p>
+        <button @click="addToCart(selectedProduct)" class="btn action-btn">🛒 Comprar</button>
+        <button @click="addToFavorites(selectedProduct)" class="btn action-btn">🖇️ Compartir Producto </button>
+        <button @click="selectedProduct = null" class="btn close-btn">✘ Cerrar</button>
+      </div>
+    </div>
+
     <!-- Lista de Productos -->
     <div class="product-list">
       <div class="product-card" v-for="product in filteredProducts" :key="product.id">
         <div class="product-image">
-          <img :src="product.image" :alt="product.name" />
+          <img :src="product.image" :alt="product.name" @click="showProductDetail(product)" />
         </div>
         <div class="product-info">
           <h3>{{ product.name }}</h3>
@@ -107,6 +101,7 @@
 
 <script>
 import Headerapp from './Headerapp.vue';
+import guayoimagen from '@/assets/imagenes/guayo.png'
 
 export default {
   components: {
@@ -120,16 +115,19 @@ export default {
       settingsVisible: false,
       cartVisible: false,
       favoritesVisible: false,
-      newProduct: {
-        name: '',
-        description: '',
-        price: 0,
-        image: ''
-      },
+      selectedProduct: null,  // Nuevo estado para el producto seleccionado
       products: [
-        { id: 1, name: 'Canilleras Nike', description: 'Protección máxima', price: 25, image: 'canilleras.jpg' },
-        { id: 2, name: 'Balón Adidas', description: 'Balón profesional', price: 50, image: 'balon.jpg' },
-        { id: 3, name: 'Guantes Puma', description: 'Guantes de portero', price: 30, image: 'guantes.jpg' }
+        { id: 1, name: 'Canilleras Nike', description: 'Protección máxima', price: 25, image: guayoimagen },
+        { id: 2, name: 'Balón Adidas', description: 'Balón de alta calidad', price: 30, image: guayoimagen },
+        { id: 3, name: 'Botines Puma', description: 'Máximo agarre y comodidad', price: 45, image: guayoimagen },
+        { id: 4, name: 'Guantes de arquero Reusch', description: 'Protección para tus manos', price: 40, image: guayoimagen },
+        { id: 5, name: 'Espinilleras Adidas', description: 'Protección ligera y duradera', price: 20, image: guayoimagen },
+        { id: 6, name: 'Camiseta Nike', description: 'Transpirable y cómoda', price: 35, image: guayoimagen },
+        { id: 7, name: 'Pantalones Nike', description: 'Comodidad para tus entrenamientos', price: 30, image: guayoimagen },
+        { id: 8, name: 'Chaqueta Puma', description: 'Resistente al viento', price: 50, image: guayoimagen },
+        { id: 9, name: 'Calcetines Nike', description: 'Comodidad y soporte', price: 15, image: guayoimagen },
+        { id: 10, name: 'Mallas Under Armour', description: 'Comodidad y rendimiento', price: 28, image: guayoimagen },
+        // ... otros productos
       ],
       filteredProducts: []
     };
@@ -161,31 +159,9 @@ export default {
     toggleFavorites() {
       this.favoritesVisible = !this.favoritesVisible;
     },
-
-    verSaldo() {
-      alert('Tu saldo actual es: $100');
+    showProductDetail(product) {
+      this.selectedProduct = product;
     },
-    publishProduct() {
-      if (this.newProduct.name && this.newProduct.description && this.newProduct.price && this.newProduct.image) {
-        const newId = this.products.length + 1;
-        this.products.push({
-          ...this.newProduct,
-          id: newId
-        });
-        this.newProduct = { name: '', description: '', price: 0, image: '' };
-        alert('Producto publicado exitosamente');
-      } else {
-        alert('Por favor complete todos los campos');
-      }
-    },
-    handleImageUpload(event) {
-      const file = event.target.files[0];
-      const reader = new FileReader();
-      reader.onload = () => {
-        this.newProduct.image = reader.result; // Almacena la imagen en base64
-      };
-      reader.readAsDataURL(file);
-    }
   },
   watch: {
     searchQuery() {
@@ -198,15 +174,50 @@ export default {
 };
 </script>
 
-
 <style scoped>
-/* Estilos para la vista previa de la imagen */
-.image-preview {
-  width: 100px;
-  height: 100px;
-  object-fit: cover;
-  border-radius: 10px;
-  margin-top: 10px;
+
+/* Estilos para el overlay de producto */
+.overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 50%;
+  height: 50%;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 999;
+  margin-top: 5%;
+}
+
+.product-detail-panel {
+  background: rgb(0, 0, 0);
+  padding: 20px;
+  border-radius: 8px;
+  text-align: center;
+  max-width: 500px;
+  width: 100%;
+}
+
+.product-detail-image {
+  width: 100%;
+  max-width: 300px;
+  margin-bottom: 20px;
+  border-radius: 5%;
+}
+
+.close-btn {
+  background-color: red;
+  color: white;
+  padding: 10px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.close-btn:hover {
+  background-color: darkred;
 }
 /* Contenedor principal */
 .store-container {
@@ -434,41 +445,71 @@ export default {
   background: #e74c3c;
 }
 
-/* Estilos adicionales */
-.publish-item {
-  margin-top: 30px;
-  background: #1e1e1e;
-  padding: 20px;
-  border-radius: 15px;
-  box-shadow: 0 4px 10px rgba(255, 255, 255, 0.1);
+
+/* Responsive*/
+
+/* Panel responsivo */
+@media (max-width: 768px) {
+  .store-container {
+    padding: 15px;
+    margin-top: 10%;
+  }
+
+  .store-header {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 15px;
+  }
+
+  .search-bar {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .search-bar input {
+    width: 100%;
+  }
+
+  .product-list {
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  }
+
+  .actions {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .actions button {
+    width: 100%;
+  }
+
+  .icons {
+    justify-content: center;
+  }
 }
 
-.publish-item h2 {
-  margin-bottom: 15px;
-}
+@media (max-width: 480px) {
+  .store-container {
+    margin-top: 72%;
+    padding: 10px;
+  }
 
-.publish-item input,
-.publish-item textarea {
-  width: 100%;
-  padding: 12px;
-  margin-bottom: 15px;
-  border-radius: 8px;
-  background: #333;
-  color: white;
-  border: none;
-}
+  .product-list {
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  }
 
-.publish-item button {
-  background: #ffcc00;
-  color: #1e1e1e;
-  padding: 12px 15px;
-  border: none;
-  cursor: pointer;
-  border-radius: 8px;
-  font-size: 14px;
-}
+  .product-card {
+    padding: 15px;
+  }
 
-.publish-item button:hover {
-  background: #ffaa00;
+  .search-bar {
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .search-btn {
+    width: 100%;
+  }
 }
 </style>

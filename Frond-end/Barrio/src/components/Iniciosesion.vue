@@ -85,11 +85,11 @@
   type="date"
   id="fecha_nacimiento"
   v-model="fechaNacimiento"
+  @change="calcularedad"
   required
-  min="1932-01-01"
+  min="1925-01-01"
   :max="fecha"
-  title="La fecha de nacimiento no puede ser mayor que hoy"
-/>
+  title="La fecha de nacimiento no puede ser mayor que hoy"/>
 </div>
 
           <div class="frminput">
@@ -106,10 +106,11 @@
   </div>
 
   <div class="frminput">
-            <label for="Edad">Edad</label>
             <br>
-            <input type="number" id="Edad" v-model="Edad" required />
+            <input type="hidden" id="Edad" v-model="Edad" required />
           </div>
+
+
           <div class="frminput">
     <select v-model="posicion" required>
       <option disabled value="">Seleccione una posición de juego</option>
@@ -131,6 +132,7 @@
       <label>Imagen</label>
       <input type="file" @change="onFileChange" accept="image/jpeg, image/png" />
   </div>
+
 
 
 
@@ -163,21 +165,20 @@
   const ciudad = ref('');
   const descripcion = ref('');
   const fileInput = ref('');
-  const Edad = ref('');
+  const Edad = ref(0);
   const posicion = ref('');
   const fecha = ref('');
 
 
-
-
-  
- // Actualiza la fecha cada segundo
-  const interval = setInterval(() => {
-    fecha.value =new Date().getFullYear() + '-' + String(new Date().getMonth() + 1).padStart(2, '0') + '-' + String(new Date().getDate()).padStart(2, '0');
-  }, 1000);
+  const calcularedadmenor = setInterval(() => {
+    const hoy = new Date();
+    hoy.setFullYear(hoy.getFullYear()-18);
+    fecha.value= hoy.toISOString().split('T')[0];
+    },1000
+  );
 
   onBeforeUnmount(() => {
-    clearInterval(interval);
+    clearInterval(calcularedadmenor);
   });
   const toggleForm = () => {
     isLogin.value = !isLogin.value;
@@ -187,7 +188,31 @@
     fileInput.value = event.target.files[0];
   };
 
-  
+  const calcularedad =()=>{
+    if(!fechaNacimiento.value){
+      Edad.value="";
+      return;
+    }
+
+    const nacimiento = new Date(fechaNacimiento.value);
+  const hoy = new Date();
+  let años = hoy.getFullYear() - nacimiento.getFullYear();
+
+
+   // Verificar si ya cumplió años este año
+  const mesHoy = hoy.getMonth();
+  const mesNacimiento = nacimiento.getMonth();
+  const diaHoy = hoy.getDate();
+  const diaNacimiento = nacimiento.getDate();
+
+  if (mesHoy < mesNacimiento || (mesHoy === mesNacimiento && diaHoy < diaNacimiento)) {
+    años--; 
+  }
+
+  Edad.value=años
+
+  };
+
 
   const iniciarSesion = async () => {
   try {
@@ -207,10 +232,9 @@
         celular: iniciar.data.celular,
         Edad: iniciar.data.Edad,
         posicion: iniciar.data.posicion,
-        fileInput: iniciar.data.imagen,  // Asegúrate de que la imagen se incluya
+        fileInput: iniciar.data.imagen, 
       };
-
-      localStorage.setItem('usuario', JSON.stringify(userData));  // Guardar el usuario en el localStorage
+      localStorage.setItem('usuario', JSON.stringify(userData));  
 
       router.push('/Perfil').then(() => {
         Swal.fire({
@@ -226,10 +250,6 @@
     console.error('Error al iniciar sesión:', error);
   }
 };
-
-
-
-
 
   const registrarUsuario = async () => {
   const { value: passwordConfirmation } = await Swal.fire({
@@ -259,6 +279,8 @@
       if (fileInput.value) {
         formData.append('file', fileInput.value);  // Añadir el archivo de imagen
       }
+      console.log("Esta es la edad: " + Edad.value)
+
 
       try {
         // Hacemos el registro con la imagen
@@ -267,6 +289,8 @@
             'Content-Type': 'multipart/form-data',
           },
         });
+
+       
 
         // Guardar la respuesta y la URL de la imagen
         const userData = {

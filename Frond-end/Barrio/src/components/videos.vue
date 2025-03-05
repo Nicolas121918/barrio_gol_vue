@@ -49,7 +49,7 @@
       <button @click="previousVideo" :disabled="currentIndex === 0">⬆</button>
       <button @click="nextVideo" :disabled="currentIndex === videosurls.length - 1">⬇</button>
     </div>
-    <button class="upload-video-button" @click="subirVideo">
+    x<button class="upload-video-button" @click="subirVideo">
   <router-link to="/subirvideo" style="text-decoration: none; color: inherit;">
     Subir Videos
   </router-link>
@@ -63,7 +63,7 @@
 </template>
 
 <script>
-import axios from 'axios';
+import axios from 'axios';  
 import Headerapp from './Headerapp.vue';
 export default {
   components:{

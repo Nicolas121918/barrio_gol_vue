@@ -6,10 +6,9 @@ import actualizar_perfil from "@/components/actualizar_perfil.vue";
 import home from "@/components/home.vue";
 import Contacto from "@/components/Contacto.vue";
 import equipo from "@/components/equipo.vue";
-import Torneos from "@/components/torneos.vue";
+import Eventos from "@/components/Eventos.vue";
 import subir_video from "@/components/subir_video.vue";
 import Notificaciones from "@/components/Notificaciones.vue";
-import crearevento from "@/components/crearevento.vue";
 import Formulario_join from "@/components/Formulario_join.vue";
 import crearequipo from "@/components/crearequipo.vue";
 import Diego from "@/components/diego.vue";
@@ -27,9 +26,11 @@ import Torneoscreador from "@/components/torneoscreador.vue";
 import ganadortorneo from "@/components/ganadortorneo.vue";
 import jugadorestorneo from "@/components/jugadorestorneo.vue";
 import targetas from "@/components/targetas.vue";
-import { Path } from "leaflet";
 import Galeria from "@/components/galeria.vue";
 import Tienda from "@/components/tienda.vue";
+import Calendario from "@/components/calendario.vue";
+import Vender from "@/components/vender.vue";
+import Creartorneo from "@/components/creartorneo.vue";
 
 
 
@@ -81,7 +82,7 @@ const routes=[
       {
         path: '/torneos',
         name: 'torneos',
-        component: Torneos,
+        component: Eventos,
         
       },
       {
@@ -111,7 +112,7 @@ const routes=[
       {
         path: '/creartorneo',
         name: 'creartorneo',
-        component: crearevento,
+        component: Creartorneo,
         
       },
       {
@@ -206,11 +207,17 @@ const routes=[
         path: '/store',
         name: 'store',
         component: Tienda
+      },
+      {
+        path: '/calendario',
+        name: 'calendario',
+        component: Calendario
+      },
+      {
+        path: '/vendedor',
+        name: 'vendedor',
+        component: Vender
       }
-
-
-    
-
 ];
 const router=createRouter({
     history:createWebHistory(),

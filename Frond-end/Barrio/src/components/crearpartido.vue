@@ -1,211 +1,255 @@
 <template>
-    <header>
-      <Headerapp></Headerapp>
-    </header>
-    <div class="form-container">
-      <form @submit.prevent="crearPartido">
-        <h1>Crear Partido de Fútbol</h1>
-  
-        <!-- Nombre del partido -->
-        <div class="form-group">
-          <label for="nombre">Nombre del Partido:</label>
-          <input type="text" id="nombre" v-model="form.nombre" placeholder="Nombre del partido" required />
-        </div>
-  
-        <!-- Fecha del partido -->
-        <div class="form-group">
-          <label for="fecha">Fecha:</label>
-          <input type="date" id="fecha" v-model="form.fecha" required />
-        </div>
-  
-        <!-- Hora del partido -->
-        <div class="form-group">
-          <label for="hora">Hora:</label>
-          <input type="time" id="hora" v-model="form.hora" required />
-        </div>
-  
-        <!-- Equipos participantes -->
-        <div class="form-group">
-          <label for="equipoLocal">Equipo Local:</label>
-          <input type="text" id="equipoLocal" v-model="form.equipoLocal" placeholder="Nombre del equipo local" required />
-        </div>
-        <div class="form-group">
-          <label for="equipoVisitante">Equipo Visitante:</label>
-          <input type="text" id="equipoVisitante" v-model="form.equipoVisitante" placeholder="Nombre del equipo visitante" required />
-        </div>
-  
-        <!-- Ubicación del partido -->
-        <div class="form-group">
-          <label for="ubicacion">Ubicación:</label>
-          <input type="text" id="ubicacion" v-model="form.ubicacion" placeholder="Ubicación del partido" required />
-        </div>
-  
-        <!-- Arbitro del partido -->
-        <div class="form-group">
-          <label for="arbitro">Árbitro:</label>
-          <input type="text" id="arbitro" v-model="form.arbitro" placeholder="Nombre del árbitro" required />
-        </div>
-  
-        <!-- Costo de entrada -->
-        <div class="form-group">
-          <label for="costoEntrada">Costo de Entrada ($):</label>
-          <input type="number" id="costoEntrada" v-model="form.costoEntrada" min="0" required placeholder="Monto de entrada" />
-        </div>
-  
-        <!-- Estado del partido -->
-        <div class="form-group">
-          <label for="estado">Estado del Partido:</label>
-          <select id="estado" v-model="form.estado" required>
-            <option value="programado">Programado</option>
-            <option value="en_curso">En curso</option>
-            <option value="terminado">Terminado</option>
-          </select>
-        </div>
-  
-        <div class="form-group">
-            <router-link to="/diego"><button type="submit" class="centered-button">Crear Partido</button></router-link>
-          
-        </div>
-      </form>
-    </div>
-  </template>
-  
-  <script>
-  import Headerapp from './Headerapp.vue';
-  import axios from 'axios';
-  
-  export default {
-    components: {
-      Headerapp,
-    },
-    data() {
-      return {
-        form: {
-          nombre: '',
-          fecha: '',
-          hora: '',
-          equipoLocal: '',
-          equipoVisitante: '',
-          ubicacion: '',
-          arbitro: '',
-          costoEntrada: '',
-          estado: 'programado',
-        },
-      };
-    },
-    methods: {
-      async crearPartido() {
-        const datosenviar = {
-          nombre: this.form.nombre,
-          fecha: this.form.fecha,
-          hora: this.form.hora,
-          equipoLocal: this.form.equipoLocal,
-          equipoVisitante: this.form.equipoVisitante,
-          ubicacion: this.form.ubicacion,
-          arbitro: this.form.arbitro,
-          costoEntrada: this.form.costoEntrada,
-          estado: this.form.estado,
-        };
-  
-        try {
-          const response = await axios.post("http://localhost:8000/crearPartido", datosenviar);
-          console.log("Partido creado con éxito:", response.data);
-          alert(`Partido creado con éxito!`);
-  
-          // Limpiar el formulario después de enviar los datos
-          this.form = {
-            nombre: '',
-            fecha: '',
-            hora: '',
-            equipoLocal: '',
-            equipoVisitante: '',
-            ubicacion: '',
-            arbitro: '',
-            costoEntrada: '',
-            estado: 'programado',
-          };
-  
-        } catch (error) {
-          console.error("Error al crear el partido:", error);
-          alert("Hubo un error al crear el partido");
-          console.log("Detalles del error:", error.response?.data);
-        }
+  <header>
+    <Headerapp></Headerapp>
+  </header>
+  <div class="form-container">
+    <h2>Crear Partido</h2>
+
+    <form @submit.prevent="crearPartido">
+
+      <!-- Nombre:  -->
+      <label>Nombre Partido :</label>
+      <input type="text" v-model="form.name" required />
+
+
+
+      <input type="hidden" v-model="form.correo_usuario" />
+
+      <!-- Hora -->
+      <label>Hora:</label>
+      <input type="time" v-model="form.hora" required />
+
+      <!-- Apuesta -->
+      <label>Apuesta:</label>
+      <input type="number" v-model="form.apuesta" required />
+
+      <!-- Ubicación -->
+      <label>Ubicación:</label>
+      <input type="text" v-model="form.ubicacionpartido" placeholder="Seleccione una ubicación"  />
+      <button type="button" class="ubicacion-btn" @click="obtenerUbicacionActual">
+        Obtener Ubicación Actual
+      </button>
+     
+
+      <!-- Logo del Partido -->
+      <div class="form_group">
+        <label class="logotext">Logo del Partido</label>
+        <input type="file" @change="onFileChange" accept="image/jpeg, image/png" />
+      </div>
+
+      <!-- Mapa -->
+      <div id="map"></div>
+
+      <!-- Botón de envío -->
+      <button type="submit" class="submit-btn">Crear Partido</button>
+    </form>
+  </div>
+</template>
+
+<script>
+import L from "leaflet";
+import Headerapp from "./Headerapp.vue";
+import axios from "axios";
+
+export default {
+  components:{
+    Headerapp
+
+  },
+  data() {
+    return {
+      correo_usuario : "",
+      form: {
+        hora: "",
+        name: "",
+        apuesta: null,
+        ubicacionpartido: "",
+        logomatch : null,
+        correo_usuario : "",
       },
+    };
+  },
+  methods: {
+    onFileChange(event) {
+  this.form.logomatch = event.target.files[0];
+},
+    async crearPartido() {
+      const datosenviar = new FormData();
+      datosenviar.append("hora", this.form.hora);
+      datosenviar.append("name", this.form.name);
+      datosenviar.append("apuesta", this.form.apuesta);
+      datosenviar.append("ubicacionpartido", this.form.ubicacionpartido);
+      datosenviar.append("logomatch", this.form.logomatch);
+      datosenviar.append("correo_usuario",this.form.correo_usuario)
+
+      try {
+        const response = await axios.post("http://localhost:8000/crearPartidos", datosenviar, {
+          headers: { "Content-Type": "multipart/form-data" },
+        });
+
+        console.log("Evento creado con éxito:", response.data);
+        alert(`Torneo creado con éxito!`);
+        
+        // Limpiar el formulario después de enviar los datos
+        this.form = {
+        hora: "",
+        name:"",
+        apuesta: null,
+        ubicacionpartido: "",
+        logomatch : null,
+        correo_usuario : ""
+        };
+
+      } catch (error) {
+        console.error("Error al crear el evento:", error);
+        console.log("Detalles del error:", error.response?.data);
+      }
     },
-  };
-  </script>
-  
-  <style scoped>
-  .form-container {
-    width: 500px;
-    max-width: 600px;
-    margin-top: 70px;
-    padding: 20px;
-    border-radius: 10px;
-    border: 2px solid #d4af37; /* Dorado */
-    background: linear-gradient(to bottom, #fff8e1, #f0e68c); /* Amarillo suave */
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-    margin-bottom: 50px;
-    margin-left: 15%;
+
+    obtenerUbicacionActual() {
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+          (position) => {
+            const { latitude, longitude } = position.coords;
+            this.obtenerNombreUbicacion(latitude, longitude);
+          },
+          () => {
+            alert('No se pudo obtener la ubicación');
+          }
+        );
+      } else {
+        alert('Geolocalización no es compatible con este navegador.');
+      }
+    },
+    obtenerNombreUbicacion(lat, lng) {
+      const url = `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json&addressdetails=1&lang=es`;
+      fetch(url)
+        .then((response) => response.json())
+        .then((data) => {
+          if (data && data.address) {
+            const city = data.address.city || data.address.town || data.address.village || 'Ubicación desconocida';
+            this.form.ubicacionpartido = city;
+          } else {
+            this.form.ubicacionpartido = 'Ubicación no encontrada';
+          }
+        })
+        .catch((error) => {
+          console.error('Error al obtener la ubicación:', error);
+          this.form.ubicacion = 'Error al obtener la ubicación';
+        });
+    },
+    initMap() {
+      // Crear un mapa centrado en Colombia
+      const map = L.map('map').setView([4.5709, -74.2973], 6); // Coordenadas de Colombia
+
+      // Añadir capa de mapa (OpenStreetMap)
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+      }).addTo(map);
+
+      // Manejar clics en el mapa para seleccionar ubicación
+      map.on('click', (e) => {
+        const { lat, lng } = e.latlng;
+        this.obtenerNombreUbicacion(lat, lng); // Obtener el nombre de la ubicación
+      });
+    },
+  },
+
+  mounted() {
+    this.initMap();
+
+      const usuarios = JSON.parse(localStorage.getItem('usuario'));
+      if (usuarios) {
+      this.form.correo_usuario = usuarios.correo;
+  } else {
+    console.error('No se encontró usuario en localStorage');
   }
+
+  },
   
-  h1 {
-    text-align: center;
-    font-size: 24px;
-    color: #d4af37; /* Dorado */
-  }
-  
-  .form-group {
-    display: flex;
-    flex-direction: column;
-    margin-bottom: 15px;
-  }
-  
-  label {
-    font-weight: bold;
-    margin-bottom: 5px;
-    color: #d4af37; /* Dorado */
-  }
-  
-  input,
-  select {
-    padding: 8px;
-    font-size: 16px;
-    border-radius: 5px;
-    border: 1px solid #d4af37; /* Dorado */
-  }
-  
-  input:focus,
-  select:focus {
-    border-color: #b8860b; /* Dorado oscuro */
-  }
-  
-  button {
-    background-color: #d4af37; /* Dorado */
-    color: white;
-    padding: 10px 20px;
-    font-size: 18px;
-    border-radius: 5px;
-    cursor: pointer;
-    text-align: center;
-    width: 100%;
-    border: none;
-  }
-  
-  button:hover {
-    background-color: #b8860b; /* Dorado oscuro */
-  }
-  
-  .centered-button {
-    display: block;
-    margin: 10px auto;
-  }
-  
-  @media (max-width: 600px) {
-    .form-container {
-      width: 90%;
-      padding: 15px;
-    }
-  }
-  </style>
-  
+};
+</script>
+
+<style scoped>
+/* Contenedor del formulario */
+.form-container {
+  width: 90%;
+  max-width: 450px;
+  margin: auto;
+  padding: 25px;
+  border-radius: 12px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+  background: #f0f8ff; /* Azul muy claro */
+  font-family: Arial, sans-serif;
+  margin-top: 40%;
+}
+
+/* Título */
+h2 {
+  text-align: center;
+  color: #064789; /* Azul oscuro */
+}
+
+/* Etiquetas */
+label {
+  display: block;
+  margin-top: 12px;
+  color: #064789;
+  font-weight: bold;
+}
+
+/* Campos de entrada */
+input {
+  width: 100%;
+  padding: 10px;
+  margin-top: 6px;
+  border: 2px solid #5aa469; /* Verde suave */
+  border-radius: 6px;
+  font-size: 16px;
+}
+
+/* Botón para obtener ubicación */
+.ubicacion-btn {
+  width: 100%;
+  padding: 10px;
+  margin-top: 12px;
+  background: #f4a261; /* Naranja */
+  color: white;
+  font-size: 16px;
+  border: none;
+  cursor: pointer;
+  border-radius: 6px;
+  transition: 0.3s;
+}
+
+.ubicacion-btn:hover {
+  background: #e76f51; /* Naranja oscuro */
+}
+
+/* Mapa */
+#map {
+  width: 100%;
+  height: 200px;
+  margin-top: 12px;
+  border-radius: 6px;
+  border: 2px solid #5aa469;
+}
+
+/* Botón de envío */
+.submit-btn {
+  width: 100%;
+  padding: 12px;
+  margin-top: 16px;
+  background: #064789; /* Azul oscuro */
+  color: white;
+  font-size: 18px;
+  border: none;
+  cursor: pointer;
+  border-radius: 8px;
+  transition: 0.3s;
+}
+
+.submit-btn:hover {
+  background: #042c5c; /* Azul más oscuro */
+}
+</style>

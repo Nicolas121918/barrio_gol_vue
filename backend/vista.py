@@ -2,29 +2,31 @@ from fastapi import FastAPI,UploadFile,File ,Form , Depends, HTTPException, Quer
 from sqlalchemy.orm import Session
 import bcrypt
 from conexion import engine, get_db
-from modelo import Base, Registro, Contacto,Jugador,Contacto_usuarios,Equipos,UserVideos,Torneos
+from modelo import Base, Registro, Contacto,Jugador,Contacto_usuarios,Equipos,UserVideos,Torneos,partidos 
 from schemas import RegistroBase as clie,LoginRequest
 from schemas import ContactForm
 from schemas import Contactousuers
 from schemas import JugadorForm
 from schemas import DatosTeams
 from schemas import videos
-from schemas import Torneo
+from schemas import Torneo,Partidos
 from fastapi.middleware.cors import CORSMiddleware
 import os
 from fastapi.staticfiles import StaticFiles
 from fastapi import HTTPException
-from typing import Optional
 
 
 app = FastAPI()
-
 app.mount("/micarpeta", StaticFiles(directory="micarpeta"), name="micarpeta")
 app.mount("/logosteams", StaticFiles(directory="logosteams"), name="logosteams")
 app.mount("/videos", StaticFiles(directory="videos"), name="videos")
 app.mount("/logosteams", StaticFiles(directory="logosteams"), name="logosteams")
 app.mount("/logostorneos", StaticFiles(directory="logostorneos"), name="logostorneos")
+app.mount("/logospartidos", StaticFiles(directory="logospartidos"), name="logospartidos")
 
+
+
+## permisos endpoints
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],  
@@ -73,7 +75,7 @@ async def registrar_cliente(
     contraseña: str = Form(...),
     file: UploadFile = File(None),
     celular : str = Form(...),
-    Edad : str = Form(...),
+    Edad : int = Form(...),
     posicion : str = Form(...),
     db: Session = Depends(get_db)
 ):
@@ -109,8 +111,16 @@ async def registrar_cliente(
         contraseña=encriptacion.decode('utf-8'),
         imagen=ruta_Imagen if file else None
     )
-
+    # Crear el registro en la tabla de datos de contacto del usuario
+    datos_contacto_usuario = Contacto_usuarios(
+        nombre=nombre,
+        email=correo,
+        celular=celular,
+        usuario_documento=documento  # Relacionamos con el usuario creado
+    )
+    
     db.add(nuevo_cliente)
+    db.add(datos_contacto_usuario)
     db.commit()
     db.refresh(nuevo_cliente)
 
@@ -119,32 +129,8 @@ async def registrar_cliente(
 
 
 
-## Endpoint Para Subir Video
-@app.post("/subirvideo", response_model=dict)
-async def subir_video(
-    video: UploadFile = File(...),
-    documento_usuario : str =  Form(...),
-    db: Session = Depends(get_db),
 
-):
-    if video.content_type not in ["video/mp3","video/mp4", "video/mkv", "video/avi", "video/mov", "video/webm"]:
-        raise HTTPException(status_code=400, detail="Formato de video no soportado")
-    
-    video_location = f"videos/{video.filename}"
-    os.makedirs("videos", exist_ok=True)
-    with open(video_location, "wb") as buffer:
-        buffer.write(await video.read())
 
-    ruta_video = f"videos/{video.filename}"
-
-    nuevovideo2 = UserVideos(
-        url=ruta_video,
-        documento_usuario =documento_usuario,
-    )
-    db.add(nuevovideo2)
-    db.commit()
-    db.refresh(nuevovideo2)
-    return {"mensaje": "Video subido correctamente", "ruta": ruta_video}
 
 #endpoint para ver los videos
 @app.get("/listarvideos", response_model=list[videos])  
@@ -153,6 +139,7 @@ async def listar_videos(db: Session = Depends(get_db)):
     if not lista_videos:
         raise HTTPException(status_code=404, detail="No Videos Todavia")
     return lista_videos
+
 
 
 ## Endpoint para lista los equipos
@@ -184,6 +171,12 @@ async def registrar_cliente(
         buffer.write(await logoteam.read())
 
     ruta_Imagen = f"logosteams/{logoteam.filename}"
+     # Buscar al capitán en la base de datos por su nombre
+    capitan = db.query(Registro).filter(Registro.nombre == capitanteam).first()
+
+    if not capitan:
+        raise HTTPException(status_code=404, detail="Capitán no encontrado en la base de datos")
+
 
 
     nuevo_Team = Equipos(
@@ -194,6 +187,7 @@ async def registrar_cliente(
         requisitos_join=requisitos_join,
         location=location,
         logoTeam=ruta_Imagen,
+        capitan_documento=capitan.documento,  # Asociar el documento del capitán
     )
 
     db.add(nuevo_Team)
@@ -206,6 +200,7 @@ async def registrar_cliente(
 ## Endpoint Para Enviar el Formulario De contacto
 @app.post("/contacto/")
 async def crear_contacto(form_data: ContactForm, db: Session = Depends(get_db)):
+
     nuevo_contacto = Contacto(
         nombre=form_data.nombre,
         queja_reclamo_quest=form_data.queja_reclamo_quest,
@@ -215,11 +210,16 @@ async def crear_contacto(form_data: ContactForm, db: Session = Depends(get_db)):
         fecha_radicacion = form_data.fecha_radicacion,
         ciudad = form_data.ciudad
     )
+
+
     db.add(nuevo_contacto)
     db.commit()
     db.refresh(nuevo_contacto)  
     
     return {"message": "Formulario enviado correctamente", "data": nuevo_contacto}
+
+
+
 
 
 ## Endpoint Para Crear la tabla de datos basicos apartir de las pqrs del usuario
@@ -274,27 +274,6 @@ async def listar_equipos(db: Session = Depends(get_db)):
     return [equipo.nombreteam for equipo in lista_Equipos]  
 
 
-## Endpoint Para insertar los videos
-@app.post("/insertarvideo", response_model=clie)
-async def nuevovideo(
-    file: UploadFile = File(...),
-
-):
-    if file.content_type not in ["video/mp3", "video/mp4"]:
-        raise HTTPException(status_code=400, detail="Formato de archivo no soportado")
-
-    file_location = f"videos/{file.filename}"
-    os.makedirs("videos", exist_ok=True)
-    with open(file_location, "wb") as buffer:
-        buffer.write(await file.read())
-
-    ruta_video = f"videos/{file.filename}"
-
-    nuevo_cliente = Registro(
-        video=ruta_video
-    )
-
-    return nuevo_cliente
 
 
 @app.put("/usuario/actualizar-foto")
@@ -382,23 +361,29 @@ async def actualizar_descripcion(
 
 
 
-# Endpoint para crear el evento
-@app.post("/crearEvento")
+# Endpoint para crear torneos
+@app.post("/crearTorneo")
 async def crear_evento(
-    tipo: str = Form(...),
+    correo_usuario : str = Form(...),
     nombre: str = Form(...),
     fecha: str = Form(...),
     ubicacion: str = Form(...),
-    numPartidos: Optional[int] = Form(None),  # Opcional
-    apuestaTorneo: Optional[float] = Form(None),  # 
-    precioArbitrajeTorneo: Optional[float] = Form(None),  # Opcional
-    precioInscripcion: Optional[float] = Form(None),  # Opcional
-    reglasTorneo: Optional[str] = Form(None),
+    numPartidos:int = Form(...),  
+    apuestaTorneo: float = Form(...),  
+    precioArbitrajeTorneo: float = Form(...),
+    precioInscripcion: float = Form(...), 
+    reglasTorneo: str = Form(...),
     numeroparticipantes : int = Form(...),
     logoTeam: UploadFile = File(...),
-    
     db: Session = Depends(get_db)
 ):
+     # Buscar al usuario en la base de datos por su email
+    usuario = db.query(Registro).filter(Registro.correo == correo_usuario).first()
+    if not usuario:
+        raise HTTPException(status_code=404, detail="Usuario no encontrado")
+    
+
+
     file_location = f"logostorneos/{logoTeam.filename}"
     os.makedirs("logostorneos", exist_ok=True)
     with open(file_location, "wb") as buffer:
@@ -408,7 +393,6 @@ async def crear_evento(
 
     # Crear una instancia de Torneos con los datos recibidos
     nuevo_evento = Torneos(
-        tipo=tipo,
         nombre=nombre,
         fecha=fecha,
         ubicacion=ubicacion,
@@ -418,6 +402,8 @@ async def crear_evento(
         precioInscripcion=precioInscripcion,
         reglasTorneo=reglasTorneo,
         numeroparticipantes=numeroparticipantes,
+        Documento_Creador_Torneo = usuario.documento,
+        Nombre_Creador_Torneo = usuario.nombre,
         logoTeam=ruta_Imagen if logoTeam else None
     )
 
@@ -429,13 +415,115 @@ async def crear_evento(
     return nuevo_evento
 
 
-## Endpoint para lista los equipos
-@app.get("/listartorneos", response_model=list[Torneo])
+
+
+
+
+# Endpoint para crear Partidos
+@app.post("/crearPartidos")
+async def crear_partidos(
+    correo_usuario : str = Form(...),
+    hora: str = Form(...),
+    name: str = Form(...),
+    apuesta: float = Form(...),
+    ubicacionpartido: str = Form(...),
+    logomatch: UploadFile = File(...),
+    db: Session = Depends(get_db)
+):
+    # Buscar al usuario en la base de datos por su email
+    usuario = db.query(Registro).filter(Registro.correo == correo_usuario).first()
+    if not usuario:
+        raise HTTPException(status_code=404, detail="Usuario no encontrado")
+    
+    file_location = f"logospartidos/{logomatch.filename}"
+    os.makedirs("logospartidos", exist_ok=True)
+    with open(file_location, "wb") as buffer:
+        buffer.write(await logomatch.read())
+
+    ruta_Imagen = f"logospartidos/{logomatch.filename}"
+
+    # Crear una instancia de Torneos con los datos recibidos
+    nuevo_partido = partidos(
+        hora=hora,
+        name=name,
+        apuesta=apuesta,
+        ubicacionpartido=ubicacionpartido,
+        Documento_Creador_P = usuario.documento,
+        Nombre_Creador_Partido = usuario.nombre,
+        logomatch=ruta_Imagen if logomatch else None
+    )
+
+    # Agregar el nuevo evento a la base de datos
+    db.add(nuevo_partido)
+    db.commit()
+    db.refresh(nuevo_partido)
+
+
+
+
+
+
+
+
+## Endpoint Para Subir Video
+@app.post("/subirvideo", response_model=dict)
+async def subir_video(
+    correo: str = Form(...),  
+    video: UploadFile = File(...),
+    db: Session = Depends(get_db),
+):
+    # Verificar si el formato del video es válido
+    if video.content_type not in ["video/mp3", "video/mp4", "video/mkv", "video/avi", "video/mov", "video/webm"]:
+        raise HTTPException(status_code=400, detail="Formato de video no soportado")
+
+    # Buscar al usuario en la base de datos por su email
+    usuario = db.query(Registro).filter(Registro.correo == correo).first()
+    if not usuario:
+        raise HTTPException(status_code=404, detail="Usuario no encontrado")
+
+    # Guardar el video en la carpeta
+    video_location = f"videos/{video.filename}"
+    os.makedirs("videos", exist_ok=True)
+    with open(video_location, "wb") as buffer:
+        buffer.write(await video.read())
+
+    # Guardar la ruta del video en la base de datos
+    ruta_video = f"videos/{video.filename}"
+    nuevovideo2 = UserVideos(
+        url=ruta_video,
+        usuario_documento=usuario.documento  # Relacionamos el video con el usuario
+    )
+
+    db.add(nuevovideo2)
+    db.commit()
+    db.refresh(nuevovideo2)
+
+    return {"mensaje": "Video subido correctamente", "ruta": ruta_video}
+
+
+
+
+
+
+## Endpoint para lista los Torneos
+@app.get("/listartorneos", response_model=List[Torneo])
 async def listar_clientes(db: Session=Depends(get_db)):
     lista_Equipos=db.query(Torneos).all()
     if not lista_Equipos:
         raise HTTPException(status_code=404, detail="No hay Equipos Todavia")
     return lista_Equipos
+
+
+
+
+@app.get("/listarpartidos", response_model=List[Partidos])  # ✅ Usa el modelo Pydantic
+async def listar_partidos(db: Session = Depends(get_db)):
+    listar_partidos = db.query(partidos).all()
+    if not listar_partidos:
+        raise HTTPException(status_code=404, detail="No hay partidos todavía")
+
+    return listar_partidos  # ✅ FastAPI convierte los objetos SQLAlchemy en JSON
+
 
 
 
@@ -452,6 +540,7 @@ def verificar_equipo(id_usuario: int, db: Session = Depends(get_db)):
 # Endpoint GET para obtener todos los usuarios
 @app.get("/usuarios", response_model=list[clie])
 async def obtener_usuarios(db: Session = Depends(get_db)):
+    
     # Consultar todos los registros de usuarios en la base de datos
     usuarios = db.query(Registro).all()
 

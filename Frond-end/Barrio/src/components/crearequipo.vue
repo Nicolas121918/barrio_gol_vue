@@ -86,7 +86,14 @@ const Insertar_team = async () => {
   if (logoTeam.value) {
     formData.append('logoteam', logoTeam.value);
   }
-
+  if (!nombreteam.value || !Descripcion.value || !numeropeople.value && numeropeople.value==0  || !capitanteam.value || !requisitos_join.value || !location.value) {
+      Swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text: 'Por favor, completa todos los campos antes de enviar.',
+      });
+      return;
+    }
   try {
     const insertar = await axios.post('http://localhost:8000/Teams', formData, {
       headers: {
@@ -107,14 +114,7 @@ const Insertar_team = async () => {
     console.log('Respuesta del servidor:', insertar);
     localStorage.setItem('Equipos', JSON.stringify(Equipos));
 
-    if (!nombreteam.value || !Descripcion.value || !numeropeople.value || !capitanteam.value || !requisitos_join.value || !location.value) {
-      Swal.fire({
-        icon: 'error',
-        title: 'Error',
-        text: 'Por favor, completa todos los campos antes de enviar.',
-      });
-      return;
-    }
+    
 
     if (insertar.status == 200) {
       Swal.fire({

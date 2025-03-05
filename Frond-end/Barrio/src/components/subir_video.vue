@@ -10,7 +10,7 @@
     <h1>¡Sube Aquí Tu Video!</h1>
     <form @submit.prevent="subirVideo">
       <input class="selectvideo" type="file" accept="video/*" @change="seleccionarVideo" />
-      <input type="hidden" v-model="documento_user_video" />
+      <input type="hidden" v-model="correo_usuario" />
       <button type="submit" class="subirboton">Subir Video</button>
     </form>
     <div v-if="mensaje" class="mensaje">
@@ -26,16 +26,16 @@ import axios from "axios";
 
 // Variables reactivas
 const videoSeleccionado = ref(null);
-const documento_user_video = ref('');
+const correo_usuario = ref('');
 const mensaje = ref("");
 
 
 
 
 onMounted(() => {
-  const documents = JSON.parse(localStorage.getItem('documents'));
-  if (documents) {
-    documento_user_video.value = documents.id;
+  const usuarios = JSON.parse(localStorage.getItem('usuario'));
+  if (usuarios) {
+    correo_usuario.value = usuarios.correo;
   } else {
     console.error('No se encontró usuario en localStorage');
   }
@@ -53,7 +53,7 @@ const subirVideo = async () => {
 
   const formData = new FormData();
   formData.append("video", videoSeleccionado.value);
-  formData.append("documento_usuario", documento_user_video.value);
+  formData.append("correo", correo_usuario.value);
 
   try {
     const response = await axios.post("http://localhost:8000/subirvideo", formData, {

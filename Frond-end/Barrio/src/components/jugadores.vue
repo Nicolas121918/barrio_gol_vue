@@ -11,7 +11,6 @@
           class="search-input"
         />
       </div>
-  
       <div class="profiles" :class="{ 'search-active': searchQuery }">
         <template v-if="filteredProfiles.length > 0">
           <div
@@ -21,8 +20,7 @@
             :class="{
               'highlight': isHighlighted(profile.nombre),
               'single-match': filteredProfiles.length === 1
-            }"
-          >
+            }">
             <img 
               :src="getImagenUrl(profile.imagen)" 
               alt="Foto de perfil" 
@@ -38,6 +36,7 @@
               Inspeccionar
             </router-link>
           </div>
+          
         </template>
         <p v-else class="no-results">
           {{ searchQuery ? `No hay resultados para "${searchQuery}"` : 'Comienza a escribir para buscar...' }}
@@ -52,6 +51,7 @@
       </div>
     </div>
   </template>
+
   <script>
   import Headerapp from "./Headerapp.vue";
   import axios from "axios";
@@ -111,6 +111,12 @@
       loadSearchQuery() {
         this.searchQuery = localStorage.getItem("searchQuery") || "";
       },
+
+
+
+
+
+
       
       async getUsuarios() {
       try {

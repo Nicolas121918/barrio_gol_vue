@@ -1,177 +1,121 @@
 <template>
-
   <header>
     <headerapp></headerapp>
   </header>
   <h1 class="titulo_torneo">Lista de Torneos y Partidos</h1>
-
-    <div class="main-container">
-      <div class="buscador_torneo">
-      
-      
-      <!-- Barra de búsqueda y botón "Ver Juegos" -->
+  <div class="main-container">
+    <div class="buscador_torneo">
       <div class="search-container">
-        <input 
-          v-model="searchQuery" 
-          type="text" 
-          placeholder="Buscar torneos o partidos..." 
-          class="search-input"
-        />
-        <router-link to="/crearpartido"><button @click="viewGames" class="view-games-button">Crear Partido</button></router-link>
-        
-        <router-link class="view-games-button" to="/creartorneo">
-        crear Torneo
-      </router-link>
-      <router-link to="/torneo_creados"><button @click="" class="view-games-button2">creados..</button></router-link>
+        <input v-model="searchQuery" type="text" placeholder="Buscar torneos o partidos..." class="search-input" />
+        <router-link class="view-games-button" to="/creartorneo">Crear Torneo</router-link>
+        <router-link class="view-games-button" to="/crearpartido">Crear Partido</router-link>
+        <router-link to="/torneo_creados"><button class="view-games-button2">Creados..</button></router-link>
       </div>
     </div>
-      <div class="card-list">
-        <div v-for="(item, index) in filteredList" :key="index" class="card3">
-          <!-- Si es un torneo -->
-          <div v-if="item.tipo === 'torneo'">
-            <div class="card-header-tor">
-              <img :src="getImagenUrl(item.logoTeam)" alt="Logo del Torneo" class="logo-img">
-              <div class="card-info-tor">
-                <h2 class="titu">{{ item.nombre }}</h2>
-                <p>Participantes: {{ item.numeroparticipantes }}</p>
-                <p>Precio de Inscripción: ${{ item.precioInscripcion }}</p>
-                <p>Precio de Arbitraje por partido: ${{ item.precioArbitrajeTorneo }}</p>
-              </div>
-            </div>
-            <div class="uno_solo">
-            <div class="rules-container">
-              <button @mouseover="showRules('torneo', index)" @mouseleave="hideRules('torneo', index)" class="torn_boton">Ver Reglas</button>
-              <div v-if="activeRules.torneo === index" class="rules-info-tor">
-                <p class="reglas">Reglas del Torneo {{ item.reglasTorneo }}</p>
-                <!-- Agrega aquí el contenido de las reglas -->
-              </div>
-            </div>
-            <button class="action-button-tor" @click="inscribirTorneo(index)">Inscribir</button>
+    <div>
+      <div v-for="(item, index) in filteredTorneos" :key="index" class="card3">
+        <div class="card-header-tor">
+          <img :src="getImagenUrl(item.logoTeam)" alt="Logo del Torneo" class="logo-img" />
+          <div class="card-info-tor">
+            <h2 class="titu">Nombre Torneo: {{ item.nombre }}</h2>
+            <p>Participantes Torneo: {{ item.numeroparticipantes }}</p>
+            <p>Precio de Inscripción Torneo: ${{ item.precioInscripcion }}</p>
+            <p>Precio de Arbitraje por partido: ${{ item.precioArbitrajeTorneo }}</p>
           </div>
         </div>
-          
-          <!-- Si es un partido -->
-          <div v-if="item.tipo === 'partido'" class="card4">
-            <div class="card-header-match">
-              <div class="card-info-match">
-                <h2 class="titu2">Torneo {{ index + 1 }}</h2>
-                <p>Hora: {{ item.hora }}</p>
-                <p>Lugar: {{ item.lugar }}</p>
-                <p>Número de partidos: {{ item.numeroPartidos }}</p>
-                <p>Apuesta: ${{ item.apuesta }}</p>
-              </div>
+        <div class="uno_solo">
+          <div class="rules-container">
+            <button @mouseover="showRules('torneo', index)" @mouseleave="hideRules('torneo', index)" class="torn_boton">Ver Reglas</button>
+            <div v-if="activeRules.torneo === index" class="rules-info-tor">
+              <p class="reglas">Reglas del Torneo: {{ item.reglasTorneo }}</p>
             </div>
-            <div class="uno_solo">
-            <div class="rules-container">
-              <button @mouseover="showRules('partido', index)" @mouseleave="hideRules('partido', index)" class="torn_boton">Ver Reglas</button>
-              <div v-if="activeRules.partido === index" class="rules-info-match">
-                <p class="reglas">Reglas del Partido {{ index + 1 }}</p>
-                <!-- Agrega aquí el contenido de las reglas -->
-              </div>
-            </div>
-            <button class="action-button-match" @click="unirPartido(index)">Unir</button>
           </div>
+          <button class="action-button-tor" @click="inscribirTorneo(index)">Inscribir</button>
         </div>
-      </div>
       </div>
     </div>
-  </template>
-  
-  
-  <script setup>
-  import { ref, computed, onMounted } from 'vue';
-  import axios from 'axios'; // Importar Axios
-  import Headerapp from './Headerapp.vue';
-  
-  const torneos = ref([]);  // Lista vacía para almacenar los torneos obtenidos del API
-  const partidos = ref([   // Aquí mantendremos los datos de los partidos como ya lo tenías
-  
-    {
-      tipo: "partido",
-      hora: "15:00",
-      lugar: "Estadio Nacional",
-      numeroPartidos: 5,
-      apuesta: 100000
-    },
-    {
-      tipo: "partido",
-      hora: "18:00",
-      lugar: "Campo de Juego",
-      numeroPartidos: 3,
-      apuesta: 50000
-    }
-    // Otros partidos...
-  ]);
-  const getImagenUrl = (path) =>{
-      return `http://127.0.0.1:8000/${path}`;
-    };
-    
-  
-  const combinedList = ref([...torneos.value, ...partidos.value]);  // Lista combinada de torneos y partidos
-  
-  // Obtener torneos del API
-  const getTorneos = async () => {
-    try {
-      const response = await axios.get('http://localhost:8000/listartorneos');
-      torneos.value = response.data; // Asignar los torneos obtenidos a la variable `torneos`
-      combinedList.value = [...torneos.value, ...partidos.value]; // Actualizar la lista combinada
-    } catch (error) {
-      console.error('Error al obtener los torneos:', error);
-    }
-  };
-  
-  onMounted(() => {
-    getTorneos();  // Llamar la función para obtener los torneos cuando el componente se monte
-  });
-  
-  // Función para mezclar la lista de manera aleatoria
-  const shuffleArray = (array) => {
-    for (let i = array.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [array[i], array[j]] = [array[j], array[i]];
-    }
-    return array;
-  };
-  
-  // Mezclar la lista combinada al cargar la página
-  combinedList.value = shuffleArray(combinedList.value);
-  
-  const activeRules = ref({ torneo: null, partido: null });
-  
-  const showRules = (type, index) => {
-    activeRules.value[type] = index;
-  };
-  
-  const hideRules = (type, index) => {
-    if (activeRules.value[type] === index) {
-      activeRules.value[type] = null;
-    }
-  };
-  
-  const inscribirTorneo = (index) => {
-    alert(`Inscripción al torneo ${index + 1}`);
-  };
-  
-  const unirPartido = (index) => {
-    alert(`Unirse al partido ${index + 1}`);
-  };
-  
-  // Buscador
-  const searchQuery = ref('');
-  const filteredList = computed(() => {
-    const query = searchQuery.value.toLowerCase();
-    return combinedList.value.filter(item => {
-      if (item.tipo === 'torneo') {
-        return item.nombre.toLowerCase().includes(query);
-      } else if (item.tipo === 'partido') {
-        return item.lugar.toLowerCase().includes(query) || item.hora.toLowerCase().includes(query);
-      }
-      return false;
-    });
-  });
-  
-  </script>
-  
+    <div>
+      <div v-for="(item, index) in filteredPartidos" :key="index" class="card3">
+        <div class="card-header-tor">
+          <img :src="getImagenUrl(item.logomatch)" alt="Logo del partido" class="logo-img" />
+          <div class="card-info-tor">
+            <h2 class="titu">Nombre Partido: {{ item.name }}</h2>
+            <p>Hora Partido: {{ item.hora }}</p>
+            <p>Apuesta: ${{ item.apuesta }}</p>
+            <p>Ubicación: {{ item.ubicacionpartido }}</p>
+          </div>
+        </div>
+        <div class="uno_solo">
+          <button class="action-button-tor" @click="inscribirTorneo(index)">Jugar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</template>
+
+<script setup>
+import { ref, computed, onMounted } from 'vue';
+import axios from 'axios';
+import Headerapp from './Headerapp.vue';
+
+const torneos = ref([]);
+const partidos = ref([]);
+const searchQuery = ref('');
+const activeRules = ref({ torneo: null, partido: null });
+
+const getImagenUrl = (path) => {
+  return path ? `http://127.0.0.1:8000/${path}` : '';
+};
+
+const getTorneos = async () => {
+  try {
+    const response = await axios.get('http://localhost:8000/listartorneos');
+    torneos.value = response.data;
+  } catch (error) {
+    console.error('Error al obtener los torneos:', error);
+  }
+};
+
+const getPartidos = async () => {
+  try {
+    const response = await axios.get('http://localhost:8000/listarpartidos');
+    partidos.value = response.data;
+  } catch (error) {
+    console.error('Error al obtener los partidos:', error);
+  }
+};
+
+const showRules = (type, index) => {
+  activeRules.value[type] = index;
+};
+
+const hideRules = (type, index) => {
+  if (activeRules.value[type] === index) {
+    activeRules.value[type] = null;
+  }
+};
+
+const inscribirTorneo = (index) => {
+  alert(`Inscripción al torneo ${index + 1}`);
+};
+
+const filteredTorneos = computed(() => {
+  return torneos.value.filter(torneo =>
+    torneo.nombre.toLowerCase().includes(searchQuery.value.toLowerCase())
+  );
+});
+
+const filteredPartidos = computed(() => {
+  return partidos.value.filter(partido =>
+    partido.name.toLowerCase().includes(searchQuery.value.toLowerCase())
+  );
+});
+
+onMounted(() => {
+  getTorneos();
+  getPartidos();
+});
+</script>
   
   
   <style scoped>
@@ -277,17 +221,18 @@
   overflow: hidden; /* Asegura que no haya bordes redondeados */
   position: relative;
   right: 10%;
+  gap: 50px;
 }
 
 .card-header-tor, .card-header-match {
   display: flex;
   align-items: center;
-  gap: 15px;
+  gap: 50px;
 }
 
 .logo-img {
-  width: 80px; /* Ajusta el tamaño del logo */
-  height: 80px; /* Ajusta el tamaño del logo */
+  width: 15%;
+  height: 15%;
   object-fit: cover;
 }
 

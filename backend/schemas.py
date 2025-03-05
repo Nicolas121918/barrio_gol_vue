@@ -11,14 +11,16 @@ class RegistroBase(BaseModel):
     correo: str = Form(...)
     contraseña: str = Form(...)
     fecha_nacimiento: str = Form(...)
-    Edad : str = Form(...)
+    Edad : int = Form(...)
     posicion : str = Form(...)
     imagen : Optional[str]=None
-   
+    
 
 class LoginRequest(BaseModel):
     correo: str
     contraseña: str
+
+    
 
 class ContactForm(BaseModel):
     nombre: str
@@ -28,6 +30,7 @@ class ContactForm(BaseModel):
     comentario: str
     fecha_radicacion : str
     ciudad : str
+    
 class Contactousuers(BaseModel):
     nombre : str
     email : str 
@@ -54,13 +57,11 @@ class DatosTeams(BaseModel):
 class videos(BaseModel):
     id : int
     url : str
-    documento_usuario : str
 
 
      
 class Torneo(BaseModel):
-    id_evento: int
-    tipo: str
+    id_Torneo: int
     nombre: str
     fecha: str
     ubicacion: str
@@ -71,4 +72,17 @@ class Torneo(BaseModel):
     reglasTorneo: str
     numeroparticipantes : int
     logoTeam : str
+    Nombre_Creador_Torneo : str
+
+
+class Partidos(BaseModel):
+    id_Partido: int
+    name : str                   
+    hora: str
+    apuesta: float
+    ubicacionpartido: str
+    logomatch  :   str
+    Nombre_Creador_Partido : str
+    class Config:
+        from_attributes = True  # ✅ Convierte objetos SQLAlchemy a JSON                                                                                         
     

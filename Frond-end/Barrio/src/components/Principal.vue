@@ -322,7 +322,10 @@ const showHeader = computed(() =>
   route.path !=='/galeria' &&
   route.path !=='/torneo_creados' &&
   route.path !=='/gana'&& 
-  route.path !== '/store'
+  route.path !== '/store' && 
+  route.path !== '/vendedor' && 
+  route.path !=='/crearpartido'
+
 );
 function toggleMenu() {
   const menu = document.getElementById('menu');

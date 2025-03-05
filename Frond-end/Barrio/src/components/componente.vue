@@ -12,6 +12,11 @@
           <h1>{{ team.name }}</h1>
           <p class="description">{{ team.description }}</p>
       </div> <!-- Descripción debajo del nombre -->
+
+      <router-link class="link torneos" to="/calendario">
+        <img class="api5" src="../assets/imagenes/calendario.png" alt="calendario">
+      </router-link>
+
       <div class="caja_hijo">
       <p>Torneos Ganados: {{ team.tournaments.length }}</p>
       <p>Miembros: {{ team.members.length }}</p>
